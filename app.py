@@ -35,11 +35,18 @@ class Invoice(BaseModel):
 
 invoice_parser = PydanticOutputParser(pydantic_object=Invoice)
 
+
+class Credibility(BaseModel):
+    credibility: str = Field(description="credibility of the invoice")
+
+
+credibility_parser = PydanticOutputParser(pydantic_object=Credibility)
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-@app.route('/api/llm', methods=['POST'])
+@app.route('/api/invoice', methods=['POST'])
 def llm_proxy():
     dict_data = request.json
     # Traitez les données avec votre SDK LLM
@@ -59,6 +66,32 @@ def llm_proxy():
     # Invoke the LLM
     response = secret_ai_llm.invoke(messages, stream=False)
     dict_response = dict(invoice_parser.invoke(response.content))
+    print("answer: ", dict_response)
+    return jsonify(dict_response)
+
+
+@app.route('/api/credibility', methods=['POST'])
+def credibility_proxy():
+    dict_data = request.json
+    # Traitez les données avec votre SDK LLM
+    # response = your_llm_sdk.process(data)
+    print("data from react: ", dict_data)
+    messages = [
+        ("system", "You are a helpful assistant and financial accounting auditor." +
+         "Given an invoice and an accounting row in dict format, " +
+         "determine if the invoice and row data are credible or not." +
+         "Give a score between 0 and 100." +
+         "0 is not credible, 100 is credible." +
+         "If data of the row is not compatiblie with the invoice, "
+         "lower the score." +
+         "When you answer, give only the result in this json format: " +
+         "{credibility: '100'}"),
+        ("human", "\naccouning row : \n" + str(dict_data["accounting_row"]) +
+         "\ninvoice : \n" + dict_data["invoice"]),
+    ]
+    # Invoke the LLM
+    response = secret_ai_llm.invoke(messages, stream=False)
+    dict_response = dict(credibility_parser.invoke(response.content))
     print("answer: ", dict_response)
     return jsonify(dict_response)
 
