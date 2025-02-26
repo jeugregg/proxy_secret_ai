@@ -84,6 +84,8 @@ def credibility_proxy():
          "0 is not credible, 100 is credible." +
          "If data of the row is not compatiblie with the invoice, "
          "lower the score." +
+         "Use a weighted approach for each field (e.g. invoice number, date, currency, amount, vendor). "
+         "Start at 100, subtract penalties based on mismatch levels, and clamp the final score between 0 and 100. "
          "When you answer, give only the result in this json format: " +
          "{credibility: '100'}"),
         ("human", "\naccouning row : \n" + str(dict_data["accounting_row"]) +
