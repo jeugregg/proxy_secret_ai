@@ -75,6 +75,7 @@ def credibility_proxy():
     dict_data = request.json
     # Traitez les données avec votre SDK LLM
     # response = your_llm_sdk.process(data)
+    print("\n******\n")
     print("data from react: ", dict_data)
     messages = [
         ("system", "You are a helpful assistant and financial accounting auditor." +
@@ -93,8 +94,9 @@ def credibility_proxy():
     ]
     # Invoke the LLM
     response = secret_ai_llm.invoke(messages, stream=False)
+    print("response:", response.content)
     dict_response = dict(credibility_parser.invoke(response.content))
-    print("answer: ", dict_response)
+    print("parsed json answer: ", dict_response)
     return jsonify(dict_response)
 
 
