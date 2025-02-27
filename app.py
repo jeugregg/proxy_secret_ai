@@ -37,11 +37,12 @@ invoice_parser = PydanticOutputParser(pydantic_object=Invoice)
 
 
 class Credibility(BaseModel):
-    credibility: str = Field(description="credibility of the invoice")
+    credibility: int = Field(description="credibility of the invoice")
 
 
 credibility_parser = PydanticOutputParser(pydantic_object=Credibility)
-
+credibility_instructions = credibility_parser.get_format_instructions()
+print("credibility_instructions: ", credibility_instructions)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -83,13 +84,13 @@ def credibility_proxy():
          "determine if the invoice and row data are credible or not." +
          "Give a score between 0 and 100." +
          "0 is not credible, 100 is credible." +
-         "If data of the row is not compatiblie with the invoice, "
+         "If data of the row is not compatiblie with the invoice, " +
          "lower the score." +
-         "Use a weighted approach for each field (e.g. invoice number, date, currency, amount, vendor). "
-         "Start at 100, subtract penalties based on mismatch levels, and clamp the final score between 0 and 100. "
-         "When you answer, give only the result in this json format: " +
-         "{credibility: '100'}"),
-        ("human", "\naccouning row : \n" + str(dict_data["accounting_row"]) +
+         "Use a weighted approach for each field (e.g. invoice number, date, currency, amount, vendor). " +
+         "Start at 100, subtract penalties based on mismatch levels, and clamp the final score between 0 and 100. " +
+         "Give only your final score in this json format without your thinkings process."),
+        ("human", "<instructions>" + credibility_instructions + "</instructions>" +
+         "\nUse these inputs : \n" + "\naccouning row : \n" + str(dict_data["accounting_row"]) +
          "\ninvoice : \n" + dict_data["invoice"]),
     ]
     # Invoke the LLM
