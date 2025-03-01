@@ -1,3 +1,12 @@
+"""
+This Flask application serves as a temporary proxy for interacting with the Secret AI LLM 
+using the Python SDK. It's designed to bridge the gap before a dedicated JavaScript SDK 
+is available for the ReactJS web application.
+
+The app exposes two API endpoints:
+- /api/invoice: Extracts invoice information from raw text using the LLM.
+- /api/credibility: Assesses the credibility of an invoice against accounting data using the LLM.
+"""
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Import the CORS package
 
@@ -24,10 +33,13 @@ secret_ai_llm = ChatSecret(
 
 
 class Invoice(BaseModel):
+    """
+    Represents the structure of an invoice with its key details.
+    """
     invoice_number: str = Field(description="number of the invoice")
     date: str = Field(description="date of the invoice")
     client_name: str = Field(description="name of the client")
-    type: str = Field(description="type of products or services")
+    description: str = Field(description="kind of products or services")
     total_amount: str = Field(description="total amount of the invoice included tax")
     tax_amount: str = Field(description="tax amount")
     currency: str = Field(description="currency")
@@ -37,6 +49,9 @@ invoice_parser = PydanticOutputParser(pydantic_object=Invoice)
 
 
 class Credibility(BaseModel):
+    """
+    Represents the credibility score of an invoice.
+    """
     credibility: int = Field(description="credibility of the invoice")
 
 
@@ -49,6 +64,12 @@ CORS(app)  # Enable CORS for all routes
 
 @app.route('/api/invoice', methods=['POST'])
 def llm_proxy():
+    """
+    API endpoint to extract invoice information from text.
+
+    Expects a POST request with a JSON payload containing a 'data' field with the invoice text.
+    Returns a JSON response containing extracted invoice details: invoice_number, date, client_name, description, total_amount, tax_amount, currency.
+    """
     dict_data = request.json
     # Traitez les données avec votre SDK LLM
     # response = your_llm_sdk.process(data)
@@ -61,7 +82,7 @@ def llm_proxy():
          "and currency." +
          "When you answer, give only the result in this json format: " +
          "{invoice_number: '1234', date: '2022-01-01', client_name: 'John Doe', " +
-         "type: 'Software', total_amount: '1000', tax_amount: '200', currency: 'EUR'}"),
+         "description: 'Software', total_amount: '1000', tax_amount: '200', currency: 'EUR'}"),
         ("human", dict_data["data"]),
     ]
     # Invoke the LLM
@@ -73,6 +94,15 @@ def llm_proxy():
 
 @app.route('/api/credibility', methods=['POST'])
 def credibility_proxy():
+    """
+    API endpoint to assess the credibility of an invoice against accounting data.
+
+    Expects a POST request with a JSON payload containing:
+    - 'accounting_row': A dictionary representing an accounting row.
+    - 'invoice': The invoice text.
+
+    Returns a JSON response with a 'credibility' score between 0 and 100.
+    """
     dict_data = request.json
     # Traitez les données avec votre SDK LLM
     # response = your_llm_sdk.process(data)
